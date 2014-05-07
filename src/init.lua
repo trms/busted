@@ -24,152 +24,93 @@ return function()
     mediator:subscribe(channel, callback, options)
   end
 
-  function busted.file(name, fn)
-    mediator:publish({'register', 'file'}, name, fn, ctx)
-  end
-
-  function busted.describe(name, fn)
-    mediator:publish({'register', 'describe'}, name, fn, ctx)
-  end
-
-  function busted.setup(fn)
-    mediator:publish({'register', 'setup'}, 'setup', fn, ctx)
-  end
-
-  function busted.teardown(fn)
-    mediator:publish({'register', 'teardown'}, 'teardown', fn, ctx)
-  end
-
-  function busted.before_each(fn)
-    mediator:publish({'register', 'before_each'}, 'before_each', fn, ctx)
-  end
-
-  function busted.after_each(fn)
-    mediator:publish({'register', 'after_each'}, 'after_each', fn, ctx)
-  end
-
-  function busted.pending(name, fn)
-    mediator:publish({'register', 'pending'}, name, fn, ctx)
-  end
-
-  function busted.it(name, fn)
-    mediator:publish({'register', 'it'}, name, fn, ctx)
-  end
-
-  function busted.execute(current)
-    if not current then current = context end
-    for k, v in pairs(current) do
-      if k == 'files' then
-        for _, file in pairs(v) do
-          mediator:publish({'file', 'start'}, file.name)
-          busted.execute(file)
-          mediator:publish({'file', 'end'}, file.name)
-        end
-      elseif k == "describes" then
-        for _, describe in pairs(v) do
-          if current.before_each then safe('before_each', current.before_each.name, current.before_each.run, current) end
-          mediator:publish({'describe', 'start'}, describe.name, describe.parent)
-          if describe.setup then safe('setup', describe.setup.name, describe.setup.run, describe) end
-          busted.execute(describe)
-          if describe.teardown then safe('teardown', describe.teardown.name, describe.teardown.run, describe) end
-          mediator:publish({'describe', 'end'}, describe.name, describe.parent)
-          if current.after_each then safe('after_each', current.after_each.name, current.after_each.run, current) end
-        end
-      elseif k == "its" then
-
-        for _, it in pairs(v) do
-          if current.before_each then safe('before_each', current.before_each.name, current.before_each.run, current) end
-          mediator:publish({'test', 'start'}, it.name, it.parent)
-          mediator:publish({'test', 'end'}, it.name, it.parent, safe('it', it.name, it.run, it.parent))
-          if current.after_each then safe('after_each', current.after_each.name, current.after_each.run, current) end
-        end
-      elseif k == "pendings" then
-        for _, pending in pairs(v) do
-          mediator:publish({'pending'}, pending.name, pending.parent)
-        end
+  local function execAll(descriptor, current, propagate)
+    if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
+    local list = current[descriptor]
+    if list then
+      for _, v in pairs(list) do
+        safe(descriptor, v.name, v.run, current)
       end
     end
   end
 
-  mediator:subscribe({'register', 'file'}, function(name, fn, parent)
-    local parent = ctx
-    if not context.files then context.files = {} end
-    local file = {
-      name = name,
-      run = fn,
-    }
-    ctx = file
-    safe('file', name, fn, parent)
-    context.files[#context.files+1] = file
-    ctx = parent
-  end)
 
-  mediator:subscribe({'register', 'describe'}, function(name, fn, parent)
-    if not ctx.describes then ctx.describes = {} end
-    local parent = ctx
-    local describe = {parent = parent, name = name, run = fn, children = {}, tests = {}, pendings = {}}
-    ctx.describes[#ctx.describes+1] = describe
-    ctx = describe
-    safe('describe', name, fn, parent)
-    ctx = parent
-  end)
+  local function dexecAll(descriptor, current, propagate)
+    local list = current[descriptor]
+    if list then
+      for _, v in pairs(list) do
+        safe(descriptor, v.name, v.run, current)
+      end
+    end
+    if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
+  end
 
-  mediator:subscribe({'register', 'pending'}, function(name, fn, parent)
-    if not ctx.pendings then ctx.pendings = {} end
-    local pending = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.pendings[#ctx.pendings+1] = pending
-  end)
+  function busted.execute(current)
+    if not current then current = context end
 
-  mediator:subscribe({'register', 'setup'}, function(name, fn, parent)
-    local setup = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.setup = setup
-  end)
+    if current.file then
+      for _, file in pairs(current.file) do
+        mediator:publish({'file', 'start'}, file.name)
+        busted.execute(file)
+        mediator:publish({'file', 'end'}, file.name)
+      end
+    end
 
-  mediator:subscribe({'register', 'teardown'}, function(name, fn, parent)
-    local teardown = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.teardown = teardown
-  end)
+    if current.describe then
+      for _, describe in pairs(current.describe) do
+        mediator:publish({'describe', 'start'}, describe.name, describe.parent)
+        execAll('setup', describe)
+        busted.execute(describe)
+        dexecAll('teardown', describe)
+        mediator:publish({'describe', 'end'}, describe.name, describe.parent)
+      end
+    end
 
+    if current.it then
+      for _, it in pairs(current.it) do
+        execAll('before_each', it.parent, true)
+        mediator:publish({'test', 'start'}, it.name, it.parent)
+        mediator:publish({'test', 'end'}, it.name, it.parent, safe('it', it.name, it.run, it.parent))
+        dexecAll('after_each', it.parent, true)
+      end
+    end
 
-  mediator:subscribe({'register', 'before_each'}, function(name, fn, parent)
-    local before = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.before_each = before
-  end)
+    if current.pending then
+      for _, pending in pairs(current.pending) do
+        mediator:publish({'pending'}, pending.name, pending.parent)
+      end
+    end
+  end
 
-  mediator:subscribe({'register', 'after_each'}, function(name, fn, parent)
-    local after = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.after_each = after
-  end)
+  function busted.register(descriptor, exec)
+    busted[descriptor] = function(name, fn)
+      if not fn then
+        fn = name
+        name = nil
+      end
+      mediator:publish({'register', descriptor}, name, fn, ctx)
+    end
+    mediator:subscribe({'register', descriptor}, function(name, fn, parent)
+      if not ctx[descriptor] then ctx[descriptor] = {} end
+      local parent = ctx
+      local plugin = {parent = parent, name = name, run = fn}
+      ctx[descriptor][#ctx[descriptor]+1] = plugin
+      if exec then
+        ctx = plugin
+        safe(descriptor, name, fn, parent)
+        ctx = parent
+      end
+    end)
+  end
 
-  mediator:subscribe({'register', 'it'}, function(name, fn, parent)
-    if not ctx.its then ctx.its = {} end
-    local it = {
-      parent = parent,
-      name = name,
-      run = fn,
-    }
-    ctx.its[#ctx.its+1] = it
-  end)
+  busted.register('file', true)
+  busted.register('describe', true)
+  busted.register('it')
+  busted.register('pending')
+  busted.register('setup')
+  busted.register('teardown')
+  busted.register('before_each')
+  busted.register('after_each')
 
   return busted
 end
