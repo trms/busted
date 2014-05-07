@@ -43,7 +43,7 @@ return function()
   function busted.execute(current)
     if not current then current = context end
     for k, v in pairs(current) do
-      if k == 'file' then
+      if k == 'files' then
         for _, file in pairs(v) do
           mediator:publish({'file', 'start'}, file.name)
           busted.execute(file)
@@ -52,7 +52,7 @@ return function()
       elseif k == "describes" then
         for _, describe in pairs(v) do
           mediator:publish({'describe', 'start'}, describe.name, describe.parent)
-          busted.execute(file)
+          busted.execute(describe)
           mediator:publish({'describe', 'end'}, describe.name, describe.parent)
         end
       elseif k == "its" then
@@ -85,9 +85,9 @@ return function()
     if not ctx.describes then ctx.describes = {} end
     local parent = ctx
     local describe = {parent = parent, name = name, run = fn, children = {}, tests = {}, pendings = {}}
+    ctx.describes[#ctx.describes+1] = describe
     ctx = describe
     safe('describe', name, fn, parent)
-    context.describes[#context.describes+1] = describe
     ctx = parent
   end)
 
