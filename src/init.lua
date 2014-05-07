@@ -67,19 +67,22 @@ return function()
         end
       elseif k == "describes" then
         for _, describe in pairs(v) do
+          if current.before_each then safe('before_each', current.before_each.name, current.before_each.run, current) end
           mediator:publish({'describe', 'start'}, describe.name, describe.parent)
+          if describe.setup then safe('setup', describe.setup.name, describe.setup.run, describe) end
           busted.execute(describe)
+          if describe.teardown then safe('teardown', describe.teardown.name, describe.teardown.run, describe) end
           mediator:publish({'describe', 'end'}, describe.name, describe.parent)
+          if current.after_each then safe('after_each', current.after_each.name, current.after_each.run, current) end
         end
       elseif k == "its" then
-        if current.setup then safe('setup', current.setup.name, current.setup.run, current) end
+
         for _, it in pairs(v) do
           if current.before_each then safe('before_each', current.before_each.name, current.before_each.run, current) end
           mediator:publish({'test', 'start'}, it.name, it.parent)
           mediator:publish({'test', 'end'}, it.name, it.parent, safe('it', it.name, it.run, it.parent))
           if current.after_each then safe('after_each', current.after_each.name, current.after_each.run, current) end
         end
-        if current.teardown then safe('teardown', current.teardown.name, current.teardown.run, current) end
       elseif k == "pendings" then
         for _, pending in pairs(v) do
           mediator:publish({'pending'}, pending.name, pending.parent)

@@ -32,18 +32,18 @@ describe('before_each after_each egg test', function()
     end)
 
     it('2', function()
-      assert.equal(egg,'SbB1AabB')
+      assert.equal(egg,'SbB1AB')
       egg = egg..'2'
     end)
   end)
 
 it('3', function()
-    assert.equal(egg,'SbB1AabB2Aab')
+    assert.equal(egg,'SbB1AB2Aab')
     egg = egg..'3'
   end)
 end)
 
 it('4', function()
-  assert.equal(egg,'SbB1AabB2Aab3aT')
+  assert.equal(egg,'SbB1AB2Aab3aT')
 end)
 
