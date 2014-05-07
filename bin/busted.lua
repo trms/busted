@@ -212,6 +212,7 @@ busted.subscribe({ 'file', 'start' }, function(...) outputHandler.fileStart(...)
 busted.subscribe({ 'file', 'end' }, function(...) outputHandler.fileEnd(...) end)
 busted.subscribe({ 'suite', 'start' }, function(...) outputHandler.suiteStart(...) end)
 busted.subscribe({ 'suite', 'end' }, function(...) outputHandler.suiteEnd(...) end)
+busted.subscribe({ 'pending' }, function(...) outputHandler.pending(...) end)
 busted.subscribe({ 'error' }, function(...) outputHandler.error(...) end)
 
 -- Set up sound
@@ -227,6 +228,8 @@ for i, fileName in pairs(fileList) do
   busted.file(fileName, file)
 end
 
+busted.publish({ 'suite', 'start' })
 busted.execute()
+busted.publish({ 'suite', 'end' })
 
 os.exit(failures)

@@ -10,7 +10,7 @@ return function()
   local ctx = context
 
   local function safe(typ, name, fn, parent)
-    xpcall(fn, function(message)
+    return xpcall(fn, function(message)
       local trace = debug.traceback('', 2)
       mediator:publish({'error', typ}, name, fn, parent, message, trace)
     end)
@@ -108,7 +108,6 @@ return function()
       name = name,
       run = fn,
     }
-    safe('it', name, fn, parent)
     ctx.its[#ctx.its+1] = it
   end)
 

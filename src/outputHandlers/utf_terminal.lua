@@ -1,28 +1,89 @@
+local ansicolors = require 'ansicolors'
+local s = require 'say'
+require('busted.languages.en')
+
 return function(options)
   local handler = { }
+  local tests = 0
+  local successes = 0
+  local failures = 0
+  local pendings = 0
 
-  handler.testStart = function(name, parent)
-    print(name .. ' started')
+  local success_string =  ansicolors('%{green}●')
+  local failure_string =  ansicolors('%{red}●')
+  local pending_string = ansicolors('%{yellow}●')
+  local running_string = ansicolors('%{blue}○')
+
+  local status_string = function(short_status, descriptive_status, successes, failures, pendings, ms, options)
+    local success_str = s('output.success_plural')
+    local failure_str = s('output.failure_plural')
+    local pending_str = s('output.pending_plural')
+
+    if successes == 0 then
+      success_str = s('output.success_zero')
+    elseif successes == 1 then
+      success_str = s('output.success_single')
+    end
+
+    if failures == 0 then
+      failure_str = s('output.failure_zero')
+    elseif failures == 1 then
+      failure_str = s('output.failure_single')
+    end
+
+    if pendings == 0 then
+      pending_str = s('output.pending_zero')
+    elseif pendings == 1 then
+      pending_str = s('output.pending_single')
+    end
+
+    if not options.defer_print then
+      short_status = ''
+    end
+
+    local formatted_time = ('%.6f'):format(ms):gsub('([0-9])0+$', '%1')
+
+    return short_status..'\n'..
+      ansicolors('%{green}'..successes)..' '..success_str..' / '..
+      ansicolors('%{red}'..failures)..' '..failure_str..' / '..
+      ansicolors('%{yellow}'..pendings)..' '..pending_str..' : '..
+      ansicolors('%{bright}'..formatted_time)..' '..s('output.seconds')..'.'..descriptive_status
   end
 
-  handler.testEnd = function(name, parent)
-    print(name .. ' ended')
+  handler.testStart = function(name, parent)
+    tests = tests + 1
+    io.write(running_string)
+  end
+
+  handler.testEnd = function(name, parent, status)
+    io.write('\08')
+
+    if status then
+      successes = successes + 1
+      io.write(success_string)
+    else
+      failures = failures + 1
+      io.write(failure_string)
+    end
+    io.flush()
+  end
+
+  handler.pending = function()
+    pendings = pendings + 1
+    io.write(pending_string)
   end
 
   handler.fileStart = function(name, parent)
-    print(name .. ' started')
   end
 
   handler.fileEnd = function(name, parent)
-    print(name .. ' ended')
   end
 
   handler.suiteStart = function(name, parent)
-    print(name .. ' started')
   end
 
   handler.suiteEnd = function(name, parent)
-    print(name .. ' ended')
+    print(status_string('', '', successes, failures, pendings, 0, {}))
   end
 
   handler.error = function(name, fn, parent, message, trace)
