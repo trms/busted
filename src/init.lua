@@ -25,33 +25,40 @@ return function()
   end
 
   function busted.file(name, fn)
-    mediator:publish({'file'}, name, fn, ctx)
+    mediator:publish({'register', 'file'}, name, fn, ctx)
   end
 
   function busted.describe(name, fn)
-    mediator:publish({'describe'}, name, fn, ctx)
+    mediator:publish({'register', 'describe'}, name, fn, ctx)
   end
 
   function busted.pending(name, fn)
-    mediator:publish({'pending'}, name, fn, ctx)
+    mediator:publish({'register', 'pending'}, name, fn, ctx)
   end
 
   function busted.it(name, fn)
-    mediator:publish({'it'}, name, fn, ctx)
+    mediator:publish({'register', 'it'}, name, fn, ctx)
   end
 
   function busted.execute(current)
     if not current then current = context end
     for k, v in pairs(current) do
-      if k == 'files' or k == 'describes' then
+      if k == 'file' then
         for _, file in pairs(v) do
+          mediator:publish({'file', 'start'}, file.name)
           busted.execute(file)
+          mediator:publish({'file', 'end'}, file.name)
+        end
+      elseif k == "describes" then
+        for _, describe in pairs(v) do
+          mediator:publish({'describe', 'start'}, describe.name, describe.parent)
+          busted.execute(file)
+          mediator:publish({'describe', 'end'}, describe.name, describe.parent)
         end
       elseif k == "its" then
         for _, it in pairs(v) do
-          if safe('it', it.name, it.run, it.parent) then
-            mediator:publish({'complete'}, it.name, it.parent)
-          end
+          mediator:publish({'test', 'start'}, it.name, it.parent)
+          mediator:publish({'test', 'end'}, it.name, it.parent, safe('it', it.name, it.run, it.parent))
         end
       elseif k == "pendings" then
         for _, pending in pairs(v) do
@@ -61,7 +68,7 @@ return function()
     end
   end
 
-  mediator:subscribe({'file'}, function(name, fn, parent)
+  mediator:subscribe({'register', 'file'}, function(name, fn, parent)
     local parent = ctx
     if not context.files then context.files = {} end
     local file = {
@@ -74,7 +81,7 @@ return function()
     ctx = parent
   end)
 
-  mediator:subscribe({'describe'}, function(name, fn, parent)
+  mediator:subscribe({'register', 'describe'}, function(name, fn, parent)
     if not ctx.describes then ctx.describes = {} end
     local parent = ctx
     local describe = {parent = parent, name = name, run = fn, children = {}, tests = {}, pendings = {}}
@@ -84,7 +91,7 @@ return function()
     ctx = parent
   end)
 
-  mediator:subscribe({'pending'}, function(name, fn, parent)
+  mediator:subscribe({'register', 'pending'}, function(name, fn, parent)
     if not ctx.pendings then ctx.pendings = {} end
     local pending = {
       parent = parent,
@@ -94,7 +101,7 @@ return function()
     ctx.pendings[#ctx.pendings+1] = pending
   end)
 
-  mediator:subscribe({'it'}, function(name, fn, parent)
+  mediator:subscribe({'register', 'it'}, function(name, fn, parent)
     if not ctx.its then ctx.its = {} end
     local it = {
       parent = parent,
