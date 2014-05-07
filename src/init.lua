@@ -43,14 +43,19 @@ return function()
   function busted.execute(current)
     if not current then current = context end
     for k, v in pairs(current) do
-      if k == 'file' or k == 'describe' then
+      if k == 'files' or k == 'describes' then
         for _, file in pairs(v) do
           busted.execute(file)
         end
-      else
-        local ok = safe(k, v.name, v.fn, v.parent)
-        if ok then
-          mediator:publish({'complete'}, v.name, v.parent)
+      elseif k == "its" then
+        for _, it in pairs(v) do
+          if safe('it', it.name, it.run, it.parent) then
+            mediator:publish({'complete'}, it.name, it.parent)
+          end
+        end
+      elseif k == "pendings" then
+        for _, pending in pairs(v) do
+          mediator:publish({'pending'}, pending.name, pending.parent)
         end
       end
     end

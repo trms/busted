@@ -3,9 +3,9 @@ local b = require 'init'()
 describe('interface tests', function()
 
   it("can catch an error in a describe block", function()
-    local err
+    local err = {}
     b.subscribe({'error'}, function(...)
-      err = {...}
+      err[#err+1] = {...}
     end)
 
     b.describe('does a describe with an error', function()
@@ -17,15 +17,18 @@ describe('interface tests', function()
     end)
 
     b.describe('does a describe', function()
-      for i = 1, 1000 do
+      for i = 1, 1 do
         b.it("does 1000 its", function()
           assert(true)
         end)
       end
     end)
 
-    assert.equal(1000, #b.context.describes[2].its)
-    assert.equal(5, #err)
+    b.execute()
+
+    assert.equal(1, #b.context.describes[2].its)
+    assert.equal(5, #err[1])
+    assert.equal(1, #err)
   end)
 
 end)
