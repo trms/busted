@@ -7,50 +7,7 @@ assert(type(after_each) == "function")
 assert(type(spy) == "table")
 assert(type(stub) == "table")
 assert(type(mock) == "function")
-local busted = require("busted")
-
-local test_val = false
-
-assert.is_not_nil(_TEST)  -- test on file-level
-
-describe "testing global _TEST" (function()
-
-  assert.is_not_nil(_TEST)
-
-  setup(function()
-    assert.is_not_nil(_TEST)
-  end)
-
-  before_each(function()
-    assert.is_not_nil(_TEST)
-  end)
-
-  after_each(function()
-    assert.is_not_nil(_TEST)
-  end)
-
-  teardown(function()
-    assert.is_not_nil(_TEST)
-  end)
-
-  it "Tests the _TEST global in an it() block" (function()
-    assert.is_not_nil(_TEST)
-  end)
-
-end)
-
-describe "Test Case" (function()
-  local test_val = true
-  assert(test_val)
-end)
-
-describe "Test case" (function()
-  local test_val = false
-  it "changes test_val to true" (function()
-    test_val = true
-    assert(test_val)
-  end)
-end)
+local busted = require("init")
 
 describe "Before each" (function()
   local test_val = false
@@ -73,7 +30,7 @@ describe "After each" (function()
 
   it "runs once to fire an after_each and then" (function() end)
   it "checks if after_each was called" (function()
-   assert(test_val)
+    assert(test_val)
   end)
 end)
 
@@ -229,30 +186,30 @@ describe "Testing test order" (function()
 
   describe "Test testorder" (function()
     it "verifies order of execution" (function()
-local expected = [[setup A
-  before_each A
-    test A one
-  after_each A
-  before_each A
-    test A two
-  after_each A
-  setup B
-    before_each A
+      local expected = [[setup A
+      before_each A
+      test A one
+      after_each A
+      before_each A
+      test A two
+      after_each A
+      setup B
+      before_each A
       before_each B
-        test B one
+      test B one
       after_each B
-    after_each A
-    before_each A
+      after_each A
+      before_each A
       before_each B
-        test B two
+      test B two
       after_each B
-    after_each A
-  teardown B
-  before_each A
-    test A three
-  after_each A
-teardown A
-]]        
+      after_each A
+      teardown B
+      before_each A
+      test A three
+      after_each A
+      teardown A
+      ]]        
       assert.is.equal(expected, testorder)
     end)
 
@@ -277,23 +234,23 @@ end)
 it "finally callback is called in case of success" (function()
   local f = spy.new(function() end)
   busted.run_internal_test(function()
-	  it "write variable in finally" (function()
-		  finally(f)
-			assert.is_true(true)						     
-		end)
-	end)				   
+    it "write variable in finally" (function()
+      finally(f)
+      assert.is_true(true)						     
+    end)
+  end)				   
   assert.spy(f).was_called(1)
 end)
 
 it "finally callback is called in case of error" (function()
   local f = spy.new(function() end)
   busted.run_internal_test(function()
-		it "write variable in finally" (function()
-			finally(f)
-			assert.is_true(false)						     
-		end)
-	end)
-	assert.spy(f).was_called(1)
+    it "write variable in finally" (function()
+      finally(f)
+      assert.is_true(false)						     
+    end)
+  end)
+  assert.spy(f).was_called(1)
 end)
 
 
@@ -339,53 +296,53 @@ end)
 
 --[[  TODO: uncomment this failing test and fix it
 describe "testing done callbacks being provided" (function()
-  setup(function(done)
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  before_each(function(done)
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  after_each(function(done)
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  teardown(function(done)
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  it "Tests done callbacks being provided" (function(done)
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
+setup(function(done)
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+before_each(function(done)
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+after_each(function(done)
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+teardown(function(done)
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+it "Tests done callbacks being provided" (function(done)
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
 end)
 
 describe "testing done callbacks being provided for async tests" (function()
-  setup(function(done)
-    async()
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  before_each(function(done)
-    async()
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  after_each(function(done)
-    async()
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  teardown(function(done)
-    async()
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
-  it "Tests done callbacks being provided for async tests" (function(done)
-    async()
-    assert.is_table(done)
-    assert.is_function(done.wait)
-  end)
+setup(function(done)
+async()
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+before_each(function(done)
+async()
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+after_each(function(done)
+async()
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+teardown(function(done)
+async()
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
+it "Tests done callbacks being provided for async tests" (function(done)
+async()
+assert.is_table(done)
+assert.is_function(done.wait)
+end)
 end)
 --]]

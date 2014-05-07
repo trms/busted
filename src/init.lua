@@ -32,6 +32,22 @@ return function()
     mediator:publish({'register', 'describe'}, name, fn, ctx)
   end
 
+  function busted.setup(fn)
+    mediator:publish({'register', 'setup'}, 'setup', fn, ctx)
+  end
+
+  function busted.teardown(fn)
+    mediator:publish({'register', 'teardown'}, 'teardown', fn, ctx)
+  end
+
+  function busted.before_each(fn)
+    mediator:publish({'register', 'before_each'}, 'before_each', fn, ctx)
+  end
+
+  function busted.after_each(fn)
+    mediator:publish({'register', 'after_each'}, 'after_each', fn, ctx)
+  end
+
   function busted.pending(name, fn)
     mediator:publish({'register', 'pending'}, name, fn, ctx)
   end
@@ -56,10 +72,14 @@ return function()
           mediator:publish({'describe', 'end'}, describe.name, describe.parent)
         end
       elseif k == "its" then
+        if current.setup then safe('setup', current.setup.name, current.setup.run, current) end
         for _, it in pairs(v) do
+          if current.before_each then safe('before_each', current.before_each.name, current.before_each.run, current) end
           mediator:publish({'test', 'start'}, it.name, it.parent)
           mediator:publish({'test', 'end'}, it.name, it.parent, safe('it', it.name, it.run, it.parent))
+          if current.after_each then safe('after_each', current.after_each.name, current.after_each.run, current) end
         end
+        if current.teardown then safe('teardown', current.teardown.name, current.teardown.run, current) end
       elseif k == "pendings" then
         for _, pending in pairs(v) do
           mediator:publish({'pending'}, pending.name, pending.parent)
@@ -99,6 +119,43 @@ return function()
       run = fn,
     }
     ctx.pendings[#ctx.pendings+1] = pending
+  end)
+
+  mediator:subscribe({'register', 'setup'}, function(name, fn, parent)
+    local setup = {
+      parent = parent,
+      name = name,
+      run = fn,
+    }
+    ctx.setup = setup
+  end)
+
+  mediator:subscribe({'register', 'teardown'}, function(name, fn, parent)
+    local teardown = {
+      parent = parent,
+      name = name,
+      run = fn,
+    }
+    ctx.teardown = teardown
+  end)
+
+
+  mediator:subscribe({'register', 'before_each'}, function(name, fn, parent)
+    local before = {
+      parent = parent,
+      name = name,
+      run = fn,
+    }
+    ctx.before_each = before
+  end)
+
+  mediator:subscribe({'register', 'after_each'}, function(name, fn, parent)
+    local after = {
+      parent = parent,
+      name = name,
+      run = fn,
+    }
+    ctx.after_each = after
   end)
 
   mediator:subscribe({'register', 'it'}, function(name, fn, parent)

@@ -9,8 +9,18 @@ local utils = require 'pl.utils'
 local dir = require 'pl.dir'
 local tablex = require 'pl.tablex'
 
+assert = require 'luassert'
+spy    = require('luassert.spy')
+mock   = require('luassert.mock')
+stub   = require('luassert.stub')
+
 describe = busted.describe
+context = describe
 it = busted.it
+setup = busted.setup
+teardown = busted.teardown
+before_each = busted.before_each
+after_each = busted.after_each
 
 -- Function to load the .busted configuration file if available
 local loadBustedConfigurationFile = function(cliArgs)
