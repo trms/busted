@@ -14,21 +14,21 @@ local test_val = false
 assert.is_not_nil(_TEST)  -- test on file-level
 
 describe "testing global _TEST" (function()
-  
+
   assert.is_not_nil(_TEST)
-  
+
   setup(function()
     assert.is_not_nil(_TEST)
   end)
-  
+
   before_each(function()
     assert.is_not_nil(_TEST)
   end)
-  
+
   after_each(function()
     assert.is_not_nil(_TEST)
   end)
-  
+
   teardown(function()
     assert.is_not_nil(_TEST)
   end)
@@ -153,14 +153,14 @@ end)
 
 
 describe "Testing test order" (function()
-  
+
   local testorder, level = "", 0
   local function report_level(desc)
     testorder = testorder .. string.rep(" ", level * 2) .. desc .. "\n"
   end
 
   describe "describe, level A" (function()
-  
+
     setup(function()
       report_level("setup A")
       level = level + 1
@@ -184,7 +184,7 @@ describe "Testing test order" (function()
     it "tests A one" (function()
       report_level("test A one")        
     end)
-    
+
     it "tests A two" (function()
       report_level("test A two")        
     end)
@@ -214,19 +214,19 @@ describe "Testing test order" (function()
       it "tests B one" (function()
         report_level("test B one")
       end)
-      
+
       it "tests B two" (function()
         report_level("test B two")        
       end)
-          
+
     end)
-  
+
     it "tests A three" (function()
       report_level("test A three")        
     end)
 
   end)
-    
+
   describe "Test testorder" (function()
     it "verifies order of execution" (function()
 local expected = [[setup A
@@ -298,7 +298,7 @@ end)
 
 
 describe "testing the done callback with tokens" (function()
-  
+
   it "Tests done call back ordered" (function(done)
     stub(done, "done_cb") -- create a stub to prevent actually calling 'done'
     done:wait_ordered("1", "2", "3")
@@ -312,7 +312,7 @@ describe "testing the done callback with tokens" (function()
     assert.stub(done.done_cb).was.called(1)
     done.done_cb:revert() -- revert so test can complete
   end)
-  
+
   it "Tests done call back unordered" (function(done)
     stub(done, "done_cb") -- create a stub to prevent actually calling 'done'
     done:wait_unordered("1", "2", "3")
@@ -325,7 +325,7 @@ describe "testing the done callback with tokens" (function()
     assert.stub(done.done_cb).was.called(1)
     done.done_cb:revert() -- revert so test can complete
   end)
-  
+
   it "Tests done call back defaulting to ordered" (function(done)
     stub(done, "done_cb") -- create a stub to prevent actually calling 'done'
     done:wait("1", "2")
@@ -334,7 +334,7 @@ describe "testing the done callback with tokens" (function()
     assert.has_no_error(function() done("2") end)  
     done.done_cb:revert() -- revert so test can complete
   end)
-  
+
 end)
 
 --[[  TODO: uncomment this failing test and fix it
