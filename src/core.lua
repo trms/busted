@@ -18,8 +18,9 @@ return function()
 
   local env = setmetatable({}, {__index=_G})
 
-  function busted.safe(typ, name, fn, parent)
-    return xpcall(setfenv(fn, env), function(message)
+  function busted.safe(typ, name, fn, parent, setenv)
+    if setenv then fn = setfenv(fn, env) end
+    return xpcall(fn, function(message)
       local trace = debug.traceback('', 2)
       mediator:publish({'error', typ}, name, fn, parent, message, trace)
     end)

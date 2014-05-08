@@ -22,7 +22,7 @@ return function(busted)
   busted.register('file', function(file)
     busted.ctx(file)
     busted.publish({'file', 'start'}, file.name)
-    if busted.safe('file', file.name, file.run, file.parent) then
+    if busted.safe('file', file.name, file.run, file.parent, true) then
       busted.execute(file)
     end
     busted.publish({'file', 'end'}, file.name)
