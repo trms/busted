@@ -4,122 +4,16 @@
 
 local cli = require 'cliargs'
 local busted = require 'src.core'()
-require 'src.init'(busted)
+
+local configLoader = require 'src.modules.configuration_loader'()
+local outputHandlerLoader = require 'src.modules.output_handler_loader'()
+local testFileLoader = require 'src.modules.test_file_loader'(busted)
+local luacov = require 'src.modules.luacov'()
 
 local path = require 'pl.path'
 local utils = require 'pl.utils'
-local dir = require 'pl.dir'
-local tablex = require 'pl.tablex'
 
-
--- Function to load the .busted configuration file if available
-local loadBustedConfigurationFile = function(cliArgs)
-  local tasks = nil
-  local bfile = path.normpath(path.join(fpath, '.busted'))
-  local success, err = pcall(function() tasks = loadfile(bfile)() end)
-
-  if cliArgs.run ~= '' then
-    if not success then
-      return print(err or '')
-    elseif type(tasks) ~= 'table' then
-      return print('Aborting: '..bfile..' file does not return a table.')
-    end
-
-    local runConfig = tasks[cliArgs.run]
-
-    if type(runConfig) == 'table' then
-      cliArgs = tablex.merge(cliArgs, runConfig, true)
-    else
-      return print('Aborting: task `'..cliArgs.run..'` not found, or not a table')
-    end
-  else
-    if success and type(tasks.default) == 'table' then
-      cliArgs = tablex.merge(cliArgs, tasks.default, true)
-    end
-  end
-
-  return cliArgs
-end
-
--- Function to initialize luacov if available
-local loadLuaCov = function()
-  local result, luacov = pcall(require, 'luacov.runner')
-
-  if not result then
-    return print('LuaCov not found on the system, try running without --coverage option, or install LuaCov first')
-  end
-
-  -- call it to start
-  luacov()
-
-  -- exclude busted files
-  table.insert(luacov.configuration.exclude, 'busted_bootstrap$')
-  table.insert(luacov.configuration.exclude, 'busted%.')
-  table.insert(luacov.configuration.exclude, 'luassert%.')
-  table.insert(luacov.configuration.exclude, 'say%.')
-  table.insert(luacov.configuration.exclude, 'pl%.')
-end
-
-local loadOutputHandler = function(output, opath, suppress, languag)
-  local handler
-
-  if output:match(".lua$") or output:match(".moon$") then
-    handler = loadfile(path.normpath(path.join(opath, output)))
-  else
-    handler = require('src.outputHandlers.'..output)
-  end
-
-  return handler({
-    supress = suppress,
-    language = language
-  })
-end
-
-local getTestFiles = function(rootFile, pattern)
-  local fileList
-
-  if path.isfile(rootFile) then
-    fileList = { rootFile }
-  elseif path.isdir(rootFile) then
-    local pattern = pattern
-    fileList = dir.getallfiles(rootFile)
-
-    fileList = tablex.filter(fileList, function(filename)
-      return path.basename(filename):find(pattern)
-    end)
-
-    fileList = tablex.filter(fileList, function(filename)
-      if path.is_windows then
-        return not filename:find('%\\%.%w+.%w+')
-      else
-        return not filename:find('/%.%w+.%w+')
-      end
-    end)
-  else
-    fileList = {}
-  end
-
-  return fileList
-end
-
--- runs a testfile, loading its tests
-local loadTestFile = function(filename)
-  local file
-
-  local success, err = pcall(function()
-    file, err = loadfile(filename)
-
-    if not file then
-      busted.publish({ "error", 'file' }, filename, nil, nil, err)
-    end
-  end)
-
-  if not success then
-    busted.publish({ "error", 'file' }, filename, nil, nil, err)
-  end
-
-  return file
-end
+require 'src.init'(busted)
 
 -- Default cli arg values
 defaultOutput = path.is_windows and 'plain_terminal' or 'utf_terminal'
@@ -165,14 +59,12 @@ local rootFile = path.normpath(path.join(fpath, cliArgs.ROOT))
 
 local pattern = cliArgs.pattern
 
--- If run arg is passed in, load busted config file
-if cliArgs.run ~= '' then
-  cliArgs = loadBustedConfigurationFile(cliArgs)
-end
+-- Load busted config file
+cliArgs = configLoader(fpath, cliArgs)
 
 -- If coverage arg is passed in, load LuaCovsupport
 if cliArgs.coverage then
-  loadLuaCov()
+  luaCov()
 end
 
 -- Add additional package paths based on lpath and cpath cliArgs
@@ -204,7 +96,7 @@ for _, excluded in pairs(utils.split(cliArgs['exclude-tags'], ',')) do
 end
 
 -- Set up output handler to listen to events
-outputHandler = loadOutputHandler(cliArgs.output, cliArgs.opath, cliArgs['suppress-pending'], cliArgs.lang)
+outputHandler = outputHandlerLoader(cliArgs.output, cliArgs.opath, cliArgs['suppress-pending'], cliArgs.lang)
 
 busted.subscribe({ 'test', 'start' }, function(...) outputHandler.testStart(...) end)
 busted.subscribe({ 'test', 'end' }, function(...) outputHandler.testEnd(...) end)
@@ -221,12 +113,7 @@ if cliArgs.s then
   busted.subscribe({ 'suite', 'end' }, function(...) soundHandler:testEnd(...) end)
 end
 
-local fileList = getTestFiles(rootFile, pattern)
-
-for i, fileName in pairs(fileList) do
-  file = loadTestFile(fileName)
-  busted.executors.file(fileName, file)
-end
+testFileLoader(rootFile, pattern)
 
 busted.publish({ 'suite', 'start' })
 busted.execute()
