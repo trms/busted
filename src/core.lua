@@ -16,10 +16,10 @@ return function()
   local executors = {}
   busted.executors = executors
 
-  local env = setmetatable({}, {__index=_G})
+  local env = setmetatable({busted = busted}, {__index=_G})
 
   function busted.safe(typ, name, fn, parent, setenv)
-    if setenv then fn = setfenv(fn, env) end
+    if setenv and type(fn) == "function" then setfenv(fn, env) end
     return xpcall(fn, function(message)
       local trace = debug.traceback('', 2)
       mediator:publish({'error', typ}, name, fn, parent, message, trace)
@@ -80,7 +80,7 @@ return function()
     busted.registered = registered
     executors = {}
     busted.executors = executors
-    env = setmetatable({}, {__index=_G})
+    env = setmetatable({busted = busted}, {__index=_G})
   end
 
   return busted

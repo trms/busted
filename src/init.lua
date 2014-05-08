@@ -19,7 +19,7 @@ return function(busted)
     if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
   end
 
-  busted.register('file', function(file)
+  local file = function(file)
     busted.ctx(file)
     busted.publish({'file', 'start'}, file.name)
     if busted.safe('file', file.name, file.run, file.parent, true) then
@@ -27,9 +27,9 @@ return function(busted)
     end
     busted.publish({'file', 'end'}, file.name)
     busted.ctx(file.parent)
-  end)
+  end
 
-  busted.register('describe', function(describe)
+  local describe = function(describe)
     busted.ctx(describe)
     busted.publish({'describe', 'start'}, describe.name, describe.parent)
     if busted.safe('describe', describe.name, describe.run, describe.parent) then
@@ -39,18 +39,26 @@ return function(busted)
     end
     busted.publish({'describe', 'end'}, describe.name, describe.parent)
     busted.ctx(describe.parent)
-  end)
+  end
 
-  busted.register('it', function(it)
+  local it = function(it)
     execAll('before_each', it.parent, true)
     busted.publish({'test', 'start'}, it.name, it.parent)
     busted.publish({'test', 'end'}, it.name, it.parent, busted.safe('it', it.name, it.run, it.parent))
     dexecAll('after_each', it.parent, true)
-  end)
+  end
 
-  busted.register('pending', function(pending)
+  local pending = function(pending)
     busted.publish({'pending'}, pending.name, pending.parent)
-  end)
+  end
+
+
+  busted.register('file', file)
+  busted.register('describe', describe)
+  busted.register('context', describe)
+
+  busted.register('it', it)
+  busted.register('pending', pending)
 
   busted.register('setup')
   busted.register('teardown')

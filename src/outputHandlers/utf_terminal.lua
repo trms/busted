@@ -92,6 +92,10 @@ return function(options)
     end
 
     if trace then
+      --local pos = trace:find("\n%s*%[C%]: in function 'safe'")
+      if pos and pos > 1 then
+        trace = trace:sub(1, pos-1)
+      end
       print(trace)
     end
   end
