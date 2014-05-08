@@ -5,4 +5,3 @@ describe('does a describe', function()
     end)
   end
 end)
-

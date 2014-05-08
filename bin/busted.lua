@@ -3,24 +3,14 @@
 -- Busted command-line runner
 
 local cli = require 'cliargs'
-local busted = require 'src.init'()
+local busted = require 'src.core'()
+require 'src.init'(busted)
+
 local path = require 'pl.path'
 local utils = require 'pl.utils'
 local dir = require 'pl.dir'
 local tablex = require 'pl.tablex'
 
-assert = require 'luassert'
-spy    = require('luassert.spy')
-mock   = require('luassert.mock')
-stub   = require('luassert.stub')
-
-describe = busted.executors.describe
-context = describe
-it = busted.executors.it
-setup = busted.executors.setup
-teardown = busted.executors.teardown
-before_each = busted.executors.before_each
-after_each = busted.executors.after_each
 
 -- Function to load the .busted configuration file if available
 local loadBustedConfigurationFile = function(cliArgs)
