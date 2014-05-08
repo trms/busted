@@ -46,20 +46,19 @@ return function()
     env[descriptor] = executors[descriptor]
     busted.subscribe({'register', descriptor}, function(name, fn, parent)
       if not parent[descriptor] then parent[descriptor] = {} end
+      if not parent.children then parent.children = {} end
       local plugin = {parent = parent, name = name, run = fn, executor = executor}
+      parent.children[#parent.children+1] = plugin
       parent[descriptor][#parent[descriptor]+1] = plugin
     end)
   end
 
   function busted.execute(current)
     if not current then current = context end
-    for _, descriptor in pairs(registered) do
-      local list = current[descriptor]
-      if list then
-        for _, v in pairs(list) do
-          if v.executor then
-            busted.safe(descriptor, v.name, function() return v.executor(v) end, current)
-          end
+    if current.children then
+      for _, v in pairs(current.children) do
+        if v.executor then
+          busted.safe(v.descriptor, v.name, function() return v.executor(v) end, current)
         end
       end
     end

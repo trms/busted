@@ -54,6 +54,7 @@ return function(busted)
 
 
   busted.register('file', file)
+
   busted.register('describe', describe)
   busted.register('context', describe)
 
