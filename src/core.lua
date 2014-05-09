@@ -5,9 +5,8 @@ return function()
 
   local busted = {}
 
-  local context = {env={busted = busted}}
-  busted.context = context
-  local ctx = context
+  busted.context = {env={busted = busted}}
+  local ctx = busted.context
 
   busted.executors = {}
 
@@ -53,6 +52,7 @@ return function()
   end
 
   function busted.register(descriptor, executor)
+
     busted.executors[descriptor] = function(name, fn)
       if not fn then
         fn = name
@@ -60,6 +60,7 @@ return function()
       end
       busted.publish({'register', descriptor}, name, fn)
     end
+
     busted.subscribe({'register', descriptor}, function(name, fn)
       if not ctx[descriptor] then ctx[descriptor] = {} end
       if not ctx.children then ctx.children = {} end
@@ -78,16 +79,6 @@ return function()
         end
       end
     end
-  end
-
-  function busted.clearContext()
-    context = {}
-    busted.context = context
-  end
-
-  function busted.clearEnv()
-    executors = {}
-    busted.executors = executors
   end
 
   return busted
