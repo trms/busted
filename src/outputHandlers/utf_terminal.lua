@@ -1,6 +1,6 @@
 local ansicolors = require 'ansicolors'
 local s = require 'say'
-require('busted.languages.en')
+require('src.languages.en')
 
 return function(options)
   local handler = { }

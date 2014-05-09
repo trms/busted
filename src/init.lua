@@ -1,6 +1,7 @@
 return function(busted)
   local function execAll(descriptor, current, propagate)
-    if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
+    local parent = busted.context.parent(current)
+    if propagate and parent then execAll(descriptor, parent, propagate) end
     local list = current[descriptor]
     if list then
       for _, v in pairs(list) do
@@ -10,13 +11,14 @@ return function(busted)
   end
 
   local function dexecAll(descriptor, current, propagate)
+    local parent = busted.context.parent(current)
     local list = current[descriptor]
     if list then
       for _, v in pairs(list) do
         busted.safe(descriptor, v.run, v)
       end
     end
-    if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
+    if propagate and parent then execAll(descriptor, parent, propagate) end
   end
 
   local file = function(file)
@@ -24,34 +26,31 @@ return function(busted)
     if busted.safe('file', file.run, file, true) then
       busted.execute(file)
     end
-    file.env = nil
-    file.children = nil
     busted.publish({'file', 'end'}, file.name)
   end
 
   local describe = function(describe)
-    busted.publish({'describe', 'start'}, describe.name, describe.parent)
+    local parent = busted.context.parent(describe)
+    busted.publish({'describe', 'start'}, describe.name, parent)
     if busted.safe('describe', describe.run, describe) then
       execAll('setup', describe)
       busted.execute(describe)
       dexecAll('teardown', describe)
     end
 
-    describe.env = nil
-    describe.children = nil
-    busted.publish({'describe', 'end'}, describe.name, describe.parent)
+    busted.publish({'describe', 'end'}, describe.name, parent)
   end
 
   local it = function(it)
-    execAll('before_each', it.parent, true)
-    busted.publish({'test', 'start'}, it.name, it.parent)
-    busted.publish({'test', 'end'}, it.name, it.parent, busted.safe('it', it.run, it))
-    it.env = nil
-    dexecAll('after_each', it.parent, true)
+    local parent = busted.context.parent(it)
+    execAll('before_each', parent, true)
+    busted.publish({'test', 'start'}, it.name, parent)
+    busted.publish({'test', 'end'}, it.name, parent, busted.safe('it', it.run, it))
+    dexecAll('after_each', parent, true)
   end
 
   local pending = function(pending)
-    busted.publish({'pending'}, pending.name, pending.parent)
+    busted.publish({'pending'}, pending.name, busted.context.parent(pending))
   end
 
 
