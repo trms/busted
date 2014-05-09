@@ -7,6 +7,9 @@ return function()
 
   local root = require 'src.context'()
   busted.context = root.ref()
+
+  local environment = require 'src.environment'(busted.context)
+
   busted.executors = {}
   local executors = {}
 
@@ -18,32 +21,8 @@ return function()
     mediator:subscribe(channel, callback, options)
   end
 
-  local function getEnv(self, key)
-    if not self then return nil end
-    return
-      self.env and self.env[key] or
-      getEnv(busted.context.parent(self), key) or
-      busted.executors[key] or
-      _G[key]
-  end
-
-  local function setEnv(self, key, value)
-    if not self.env then self.env={} end
-    self.env[key] = value
-  end
-
-  local function __index(self, key)
-    return getEnv(busted.context.get(), key)
-  end
-
-  local function __newindex(self, key, value)
-    setEnv(busted.context.get(), key, value)
-  end
-
-  local env = setmetatable({}, {__index=__index, __newindex=__newindex})
-
   function busted.safe(descriptor, run, element, setenv)
-    if setenv and type(run) == "function" then setfenv(element.run, env) end
+    if setenv and type(run) == "function" then environment.wrap(run) end
     busted.context.push(element)
     local ret = {xpcall(run, function(message)
       local trace = debug.traceback('', 2)
@@ -55,13 +34,15 @@ return function()
 
   function busted.register(descriptor, executor)
     executors[descriptor] = executor
-    busted.executors[descriptor] = function(name, fn)
+    local publisher = function(name, fn)
       if not fn then
         fn = name
         name = nil
       end
       busted.publish({'register', descriptor}, name, fn)
     end
+    busted.executors[descriptor] = publisher
+    environment.set(descriptor, publisher)
 
     busted.subscribe({'register', descriptor}, function(name, fn)
       local ctx = busted.context.get()
