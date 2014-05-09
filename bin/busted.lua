@@ -59,8 +59,17 @@ local rootFile = path.normpath(path.join(fpath, cliArgs.ROOT))
 
 local pattern = cliArgs.pattern
 
--- Load busted config file
-cliArgs = configLoader(fpath, cliArgs)
+-- Load busted config file if available
+local bustedConfigFilePath = path.normpath(path.join(fpath, '.busted'))
+local bustedConfigFile = pcall(function() tasks = loadfile(bustedConfigFilePath)() end)
+
+if bustedConfigFile then
+  local config, err = configLoader(bustedConfigFile, config, cliArgs)
+
+  if err then
+    print(err)
+  end
+end
 
 -- If coverage arg is passed in, load LuaCovsupport
 if cliArgs.coverage then

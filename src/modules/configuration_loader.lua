@@ -1,33 +1,29 @@
 return function()
   local path = require 'pl.path'
+  local tablex = require 'pl.tablex'
 
   -- Function to load the .busted configuration file if available
-  local loadBustedConfigurationFile = function(fpath, config)
-  local tasks = nil
-  local bfile = path.normpath(path.join(fpath, '.busted'))
-  local success, err = pcall(function() tasks = loadfile(bfile)() end)
+  local loadBustedConfigurationFile = function(configFile, config, run)
+    if run and run ~= '' then
+      if type(configFile) ~= 'table' then
+        return config, '.busted file does not return a table.'
+      end
 
-  if config.run ~= '' then
-    if not success then
-      return print(err or '')
-    elseif type(tasks) ~= 'table' then
-      return print('Aborting: '..bfile..' file does not return a table.')
+      local runConfig = configFile[run]
+
+      if type(runConfig) == 'table' then
+        config = tablex.merge(config, runConfig, true)
+        return config
+      else
+        return config, 'Task `' .. run .. '` not found, or not a table.'
+      end
     end
 
-    local runConfig = tasks[config.run]
-
-    if type(runConfig) == 'table' then
-      config = tablex.merge(config, runConfig, true)
-    else
-      return print('Aborting: task `'..config.run..'` not found, or not a table')
+    if configFile and type(configFile.default) == 'table' then
+      return tablex.merge(config, configFile.default, true)
     end
-  else
-    if success and type(tasks.default) == 'table' then
-      config = tablex.merge(config, tasks.default, true)
-    end
-  end
 
-  return config
+    return config
   end
 
   return loadBustedConfigurationFile
