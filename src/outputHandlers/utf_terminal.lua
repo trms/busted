@@ -14,6 +14,8 @@ return function(options)
   local pending_string = ansicolors('%{yellow}●')
   local running_string = ansicolors('%{blue}○')
 
+  local errors = { }
+
   local status_string = function(short_status, descriptive_status, successes, failures, pendings, ms, options)
     local success_str = s('output.success_plural')
     local failure_str = s('output.failure_plural')
@@ -83,12 +85,24 @@ return function(options)
   end
 
   handler.suiteEnd = function(name, parent)
+    print('')
+
+    if #errors > 0 then
+      print('Errors:')
+    end
+
+    for i, error in pairs(errors) do
+      print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      print(error)
+    end
+
     print(status_string('', '', successes, failures, pendings, 0, {}))
   end
 
   handler.error = function(name, fn, parent, message, trace)
+    local error = ""
     if message then
-      print(message)
+      error = message
     end
 
     if trace then
@@ -96,7 +110,9 @@ return function(options)
       if pos and pos > 1 then
         trace = trace:sub(1, pos-1)
       end
-      print(trace)
+
+      error = error .. trace
+      table.insert(errors, error)
     end
   end
 
