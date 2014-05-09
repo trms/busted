@@ -24,6 +24,8 @@ return function(busted)
     if busted.safe('file', file.run, file, true) then
       busted.execute(file)
     end
+    file.env = nil
+    file.children = nil
     busted.publish({'file', 'end'}, file.name)
   end
 
@@ -34,6 +36,9 @@ return function(busted)
       busted.execute(describe)
       dexecAll('teardown', describe)
     end
+
+    describe.env = nil
+    describe.children = nil
     busted.publish({'describe', 'end'}, describe.name, describe.parent)
   end
 
@@ -41,6 +46,7 @@ return function(busted)
     execAll('before_each', it.parent, true)
     busted.publish({'test', 'start'}, it.name, it.parent)
     busted.publish({'test', 'end'}, it.name, it.parent, busted.safe('it', it.run, it))
+    it.env = nil
     dexecAll('after_each', it.parent, true)
   end
 
