@@ -346,3 +346,15 @@ pending("testing done callbacks being provided for async tests", function()
     assert.is_function(done.wait)
   end)
 end)
+
+describe("tests environment", function()
+  global = "global"
+  it("can access globals", function()
+    assert.equal("global", global)
+    notglobal = "notglobal"
+  end)
+
+  it("cannot access globals set in siblings", function()
+    assert.equal(nil, notglobal)
+  end)
+end)

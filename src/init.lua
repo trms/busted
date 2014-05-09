@@ -4,7 +4,7 @@ return function(busted)
     local list = current[descriptor]
     if list then
       for _, v in pairs(list) do
-        busted.safe(descriptor, v.name, v.run, current)
+        busted.safe(descriptor, v.run, v)
       end
     end
   end
@@ -13,38 +13,34 @@ return function(busted)
     local list = current[descriptor]
     if list then
       for _, v in pairs(list) do
-        busted.safe(descriptor, v.name, v.run, current)
+        busted.safe(descriptor, v.run, v)
       end
     end
     if propagate and current.parent then execAll(descriptor, current.parent, propagate) end
   end
 
   local file = function(file)
-    busted.ctx(file)
     busted.publish({'file', 'start'}, file.name)
-    if busted.safe('file', file.name, file.run, file.parent, true) then
+    if busted.safe('file', file.run, file, true) then
       busted.execute(file)
     end
     busted.publish({'file', 'end'}, file.name)
-    busted.ctx(file.parent)
   end
 
   local describe = function(describe)
-    busted.ctx(describe)
     busted.publish({'describe', 'start'}, describe.name, describe.parent)
-    if busted.safe('describe', describe.name, describe.run, describe.parent) then
+    if busted.safe('describe', describe.run, describe) then
       execAll('setup', describe)
       busted.execute(describe)
       dexecAll('teardown', describe)
     end
     busted.publish({'describe', 'end'}, describe.name, describe.parent)
-    busted.ctx(describe.parent)
   end
 
   local it = function(it)
     execAll('before_each', it.parent, true)
     busted.publish({'test', 'start'}, it.name, it.parent)
-    busted.publish({'test', 'end'}, it.name, it.parent, busted.safe('it', it.name, it.run, it.parent))
+    busted.publish({'test', 'end'}, it.name, it.parent, busted.safe('it', it.run, it))
     dexecAll('after_each', it.parent, true)
   end
 
