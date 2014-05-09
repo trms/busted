@@ -25,8 +25,8 @@ return function()
   end
 
   --ENV
-  local function lookupEnv(self, key)
-    return self.env and self.env[key] or self.parent and lookupEnv(self.parent, key) or _G[key]
+  local function getEnv(self, key)
+    return self.env and self.env[key] or self.parent and getEnv(self.parent, key) or _G[key]
   end
 
   local function setEnv(self, key, value)
@@ -35,7 +35,7 @@ return function()
   end
 
   local function __index(self, key)
-    return lookupEnv(ctx, key)
+    return getEnv(ctx, key)
   end
 
   local function __newindex(self, key, value)
