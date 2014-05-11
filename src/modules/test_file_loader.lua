@@ -54,7 +54,9 @@ return function(busted)
 
     for i, fileName in pairs(fileList) do
       file = loadTestFile(busted, fileName)
-      busted.executors.file(fileName, file)
+      if file then
+        busted.executors.file(fileName, file)
+      end
     end
   end
 

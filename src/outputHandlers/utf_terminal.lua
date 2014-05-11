@@ -91,29 +91,29 @@ return function(options)
       print('Errors:')
     end
 
-    for i, error in pairs(errors) do
+    for i, err in pairs(errors) do
       print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-      print(error)
+      print(err.err)
     end
 
     print(status_string('', '', successes, failures, pendings, 0, {}))
   end
 
   handler.error = function(name, fn, parent, message, trace)
-    local error = ""
+    local err = ""
     if message then
-      error = message
+      err = message
     end
 
     if trace then
-      --local pos = trace:find("\n%s*%[C%]: in function 'safe'")
+      local pos = trace:find("\n%s*%[C%]: in function 'safe'")
       if pos and pos > 1 then
         trace = trace:sub(1, pos-1)
       end
 
-      error = error .. trace
-      table.insert(errors, error)
+      err = err .. trace
     end
+    table.insert(errors, {name = name, err=err})
   end
 
   return handler

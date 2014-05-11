@@ -11,12 +11,12 @@ return function()
   busted.executors = {}
   local executors = {}
 
-  function busted.publish(channel, ...)
-    mediator:publish(channel, ...)
+  function busted.publish(...)
+    mediator:publish(...)
   end
 
-  function busted.subscribe(channel, callback, options)
-    mediator:subscribe(channel, callback, options)
+  function busted.subscribe(...)
+    mediator:subscribe(...)
   end
 
   function busted.safe(descriptor, run, element, setenv)
