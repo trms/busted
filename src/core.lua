@@ -1,5 +1,3 @@
-require('src.compatibility')
-
 return function()
   local mediator = require 'mediator'()
 
