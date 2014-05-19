@@ -11,7 +11,6 @@ local defaultpattern = busted.defaultpattern
 local defaultlua = busted.defaultlua
 local lpathprefix = busted.lpathprefix
 local cpathprefix = busted.cpathprefix
-local ansicolors = require "ansicolors"
 
 cli:set_name("busted")
 cli:add_flag("--version", "prints the program's version and exits")
