@@ -2,7 +2,7 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 1.11.1.8;
+		version: 1.11.1.10;
 		authors: {coapp, Olivine Labs, Christian Bechette, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
@@ -56,7 +56,7 @@ nuget {
 		// batch files and anything needed by the cli will go in the root
 		AfterBuild {
 			.Copy {
-				DestinationFiles = "@(bustedDir->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')";
+				DestinationFiles = "@(bustedDir->'$(TargetDir)busted\%(RecursiveDir)%(Filename)%(Extension)')";
 				SourceFiles = "@(bustedDir)";
 				SkipUnchangedFiles = true;
 			};
