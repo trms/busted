@@ -1,0 +1,72 @@
+nuget {
+	nuspec {
+		id = busted;
+		title: busted;
+		version: 1.11.1.8;
+		authors: {coapp, Olivine Labs, Christian Bechette, Tightrope Media Systems};
+		owners: {Olivine Labs};
+
+		licenseUrl: "http://opensource.org/licenses/MIT";
+		licenseUrl: "http://opensource.org/licenses/MIT";
+		projectUrl: "http://olivinelabs.com/busted";
+		copyright: "Copyright (c) 2012 Olivine Labs, LLC.";
+		
+		requireLicenseAcceptance: false;
+		summary: "busted is a unit testing framework with a focus on being **easy to use**. Supports Lua >= 5.1, luajit >= 2.0.0, and moonscript.";
+		releaseNotes: @"http://olivinelabs.com/busted"; 
+		description: @"busted is a unit testing framework with a focus on being **easy to use**. Supports Lua >= 5.1, luajit >= 2.0.0, and moonscript.";
+		tags: {native, Lua, module};
+	}
+	dependencies {
+        // This node defines any outside items which may be needed to consume this package.
+        packages : {
+            // This is a list of other NuGet packages required to use this package.
+            // Each item follows the format "<pkg_name>/<version>"
+            lua/"[5.1, 5.4)",
+			say,
+			luassert,
+			ansicolors,
+			dkjson,
+			cliargs,
+        };
+    }
+	files {
+		// declare a lua collection
+		lua : {
+			// copies the whole folder tree.
+			#add-all-files : Items.bustedDir;
+			// set the destination in the package itself. 
+			#destination : ${build_root}\busted;
+		};
+		
+		bus : {
+			// copies the whole folder tree.
+			#add-all-files : Items.bustedBatchDir;
+			// set the destination in the package itself. 
+			#destination : ${build_root}\bustedbatchfiles;
+		};
+		
+		lua: {".\src\**\*.lua"};
+		
+		bus: {".\bin\busted.bat";".\bin\busted_bootstrap"};
+    }
+
+    targets {
+		// .lua files will go in a busted\ folder
+		// batch files and anything needed by the cli will go in the root
+		AfterBuild {
+			.Copy {
+				DestinationFiles = "@(bustedDir->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')";
+				SourceFiles = "@(bustedDir)";
+				SkipUnchangedFiles = true;
+			};
+		};
+		AfterBuild {
+			.Copy {
+				DestinationFiles = "@(bustedBatchDir->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')";
+				SourceFiles = "@(bustedBatchDir)";
+				SkipUnchangedFiles = true;
+			};
+		};
+	}
+}
