@@ -2,7 +2,7 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 1.11.1.10;
+		version: 1.11.1.28;
 		authors: {coapp, Olivine Labs, Christian Bechette, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
@@ -23,11 +23,13 @@ nuget {
             // This is a list of other NuGet packages required to use this package.
             // Each item follows the format "<pkg_name>/<version>"
             lua/"[5.1, 5.4)",
+			cliargs,
+			luafilesystem, 
+			dkjson,
 			say,
 			luassert,
 			ansicolors,
-			dkjson,
-			cliargs,
+			penlight,
         };
     }
 	files {
