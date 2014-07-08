@@ -2,8 +2,8 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 1.11.1.28;
-		authors: {coapp, Olivine Labs, Christian Bechette, Tightrope Media Systems};
+		version: 2.0.0.3;
+		authors: {coapp, Olivine Labs, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
 		licenseUrl: "http://opensource.org/licenses/MIT";
@@ -22,7 +22,7 @@ nuget {
         packages : {
             // This is a list of other NuGet packages required to use this package.
             // Each item follows the format "<pkg_name>/<version>"
-            lua/"[5.1, 5.4)",
+            lua/"[5.3.0003.02, 5.4)",
 			cliargs,
 			luafilesystem, 
 			dkjson,
@@ -30,6 +30,7 @@ nuget {
 			luassert,
 			ansicolors,
 			penlight,
+			mediator_lua,
         };
     }
 	files {
@@ -48,9 +49,9 @@ nuget {
 			#destination : ${build_root}\bustedbatchfiles;
 		};
 		
-		lua: {".\src\**\*.lua"};
+		lua: {".\busted\**\*.lua"};
 		
-		bus: {".\bin\busted.bat";".\bin\busted_bootstrap"};
+		bus: .\bin\busted;
     }
 
     targets {
@@ -65,7 +66,7 @@ nuget {
 		};
 		AfterBuild {
 			.Copy {
-				DestinationFiles = "@(bustedBatchDir->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')";
+				DestinationFiles = "@(bustedBatchDir->'$(TargetDir)%(RecursiveDir)%(Filename).lua')";
 				SourceFiles = "@(bustedBatchDir)";
 				SkipUnchangedFiles = true;
 			};
