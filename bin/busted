@@ -12,8 +12,8 @@ local path = require 'pl.path'
 local utils = require 'pl.utils'
 
 require 'busted.init'(busted)
-local unpack = table.unpack
-local debug = require'debug'
+unpack = table.unpack
+debug = require'debug'
 
 -- Default cli arg values
 local defaultOutput = path.is_windows and 'plainTerminal' or 'utfTerminal'
