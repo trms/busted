@@ -1,6 +1,5 @@
 #!/usr/bin/env lua
 -- Busted command-line runner
-
 local cli = require 'cliargs'
 local busted = require 'busted.core'()
 
@@ -13,6 +12,8 @@ local path = require 'pl.path'
 local utils = require 'pl.utils'
 
 require 'busted.init'(busted)
+local unpack = table.unpack
+local debug = require'debug'
 
 -- Default cli arg values
 local defaultOutput = path.is_windows and 'plainTerminal' or 'utfTerminal'

@@ -2,7 +2,7 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 2.0.0.3;
+		version: 2.0.0.4;
 		authors: {coapp, Olivine Labs, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
