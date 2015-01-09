@@ -2,7 +2,7 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 2.0.0.5;
+		version: 2.0.0.6;
 		authors: {coapp, Olivine Labs, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
@@ -51,7 +51,7 @@ nuget {
 		
 		lua: {".\busted\**\*.lua"};
 		
-		bus: .\bin\busted;
+		bus: .\bin\busted.bat;
     }
 
     targets {
@@ -59,7 +59,7 @@ nuget {
 		// batch files and anything needed by the cli will go in the root
 		AfterBuild {
 			.Copy {
-				DestinationFiles = "@(bustedDir->'$(TargetDir)busted\%(RecursiveDir)%(Filename)%(Extension)')";
+				DestinationFiles = "@(bustedDir->'$(TargetDir)lua\busted\%(RecursiveDir)%(Filename)%(Extension)')";
 				SourceFiles = "@(bustedDir)";
 				SkipUnchangedFiles = true;
 			};
