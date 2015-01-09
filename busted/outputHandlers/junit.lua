@@ -1,92 +1,70 @@
 local xml = require 'pl.xml'
-local hostname = assert(io.popen('uname -n')):read('*l')
+local socket = require("socket")
+local string = require("string")
 
 return function(options, busted)
-  -- options.language, options.deferPrint, options.suppressPending, options.verbose
-  local node
-  local startTime, endTime
-  local handler = {}
+  local handler = require 'busted.outputHandlers.base'(busted)
+  local xml_doc
+  local suiteStartTime, suiteEndTime
 
-  local getFullName = function(context)
-    local parent = context.parent
-    local names = { (context.name or context.descriptor) }
-
-    while parent and (parent.name or parent.descriptor) and
-          parent.descriptor ~= 'file' do
-
-      current_context = context.parent
-      table.insert(names, 1, parent.name or parent.descriptor)
-      parent = busted.context.parent(parent)
-    end
-
-    return table.concat(names, ' ')
-  end
-
-  handler.testStart = function(name, parent)
-    return nil, true
-  end
-
-  handler.testEnd = function(element, parent, status)
-    node.attr.tests = node.attr.tests + 1
-
-    node:addtag('testcase', {
-      classname = element.trace.short_src .. ':' .. element.trace.currentline,
-      name = element.name
-    })
-
-    if status == 'failure' then
-      node.attr.failures = node.attr.failures + 1
-    end
-
-    return nil, true
-  end
-
-  handler.fileStart = function(name, parent)
-    return nil, true
-  end
-
-  handler.fileEnd = function(name, parent)
-    return nil, true
-  end
-
-  handler.suiteStart = function(name, parent)
-    startTime = os.clock()
-
-    node = xml.new('testsuite', {
+  handler.suiteStart = function()
+    suiteStartTime = socket.gettime()
+    xml_doc = xml.new('testsuite', {
       tests = 0,
       errors = 0,
       failures = 0,
       skip = 0,
-      header = 'Busted Suite',
-      hostname = hostname,
-      timestamp = os.time()
     })
 
     return nil, true
   end
 
-  handler.suiteEnd = function(name, parent)
-    endTime = os.clock()
+  local function now()
+    return string.format("%.2f", (socket.gettime() - suiteStartTime))
+  end
 
-    local ms = (endTime - startTime) * 1000
-    node.attr.time = ms
+  handler.suiteEnd = function()
+    xml_doc.attr.time = now()
 
-    print(xml.tostring(node, '', '\t'))
+    print(xml.tostring(xml_doc, '', '\t', nil, false))
 
     return nil, true
   end
 
-  handler.error = function(element, parent, message, trace)
+  handler.testEnd = function(element, parent, status)
+    xml_doc.attr.tests = xml_doc.attr.tests + 1
+
+    local testcase_node = xml.new('testcase', {
+      classname = element.trace.short_src .. ':' .. element.trace.currentline,
+      name = handler.getFullName(element),
+      time = now()
+    })
+    xml_doc:add_direct_child(testcase_node)
+
     if status == 'failure' then
-      node.attr.errors = node.attr.errors + 1
+      xml_doc.attr.failures = xml_doc.attr.failures + 1
+      testcase_node:addtag('failure')
+      testcase_node:text(element.trace.traceback)
+      testcase_node:up()
     end
 
-    node:addtag('failure', {
-      message = message
-    }):text(trace.traceback):up()
+    return nil, true
+  end
+
+  handler.errorFile = function(element, parent, message, trace)
+    xml_doc.attr.errors = xml_doc.attr.errors + 1
+    xml_doc:addtag('error')
+    xml_doc:text(trace.traceback)
+    xml_doc:up()
 
     return nil, true
   end
+
+  busted.subscribe({ 'suite', 'start' }, handler.suiteStart)
+  busted.subscribe({ 'suite', 'end' }, handler.suiteEnd)
+  busted.subscribe({ 'test', 'end' }, handler.testEnd, { predicate = handler.cancelOnPending })
+  busted.subscribe({ 'error', 'file' }, handler.errorFile)
+  busted.subscribe({ 'failure', 'file' }, handler.errorFile)
 
   return handler
 end

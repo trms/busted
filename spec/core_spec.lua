@@ -1,7 +1,10 @@
 --ensure environment is set up
+assert(type(file) == 'nil')
 assert(type(describe) == 'function')
 assert(type(context) == 'function')
 assert(type(it) == 'function')
+assert(type(spec) == 'function')
+assert(type(test) == 'function')
 assert(type(before_each) == 'function')
 assert(type(after_each) == 'function')
 assert(type(spy) == 'table')
@@ -228,13 +231,47 @@ end)
 describe('tests environment', function()
   global = 'global'
 
+  setup(function()
+    globalsetup = 'globalsetup'
+  end)
+
+  teardown(function()
+    globalteardown = 'globalteardown'
+  end)
+
+  before_each(function()
+    globalbefore = 'globalbefore'
+  end)
+
+  after_each(function()
+    globalafter = 'globalafter'
+  end)
+
+  it('cannot access globals which have not been created yet', function()
+    assert.equal(nil, globalafter)
+    assert.equal(nil, globalteardown)
+    notglobal = 'notglobal'
+  end)
+
   it('can access globals', function()
     assert.equal('global', global)
+    assert.equal('globalsetup', globalsetup)
+    assert.equal('globalbefore', globalbefore)
+    assert.equal('globalafter', globalafter)
     notglobal = 'notglobal'
   end)
 
   it('cannot access globals set in siblings', function()
     assert.equal(nil, notglobal)
+  end)
+
+  describe('can access parent globals', function()
+    it('from child', function()
+      assert.equal('global', global)
+      assert.equal('globalsetup', globalsetup)
+      assert.equal('globalbefore', globalbefore)
+      assert.equal('globalafter', globalafter)
+    end)
   end)
 
   describe('cannot access globals set in children', function()
@@ -243,5 +280,103 @@ describe('tests environment', function()
     end)
 
     assert.are.equal(notglobal, nil)
+  end)
+end)
+
+describe 'tests syntactic sugar' (function()
+   it 'works' (function()
+      assert(true)
+   end)
+end)
+
+describe('tests aliases', function()
+  local test_val = 0
+
+  context('runs context alias', function()
+    setup(function()
+      test_val = test_val + 1
+    end)
+
+    before_each(function()
+      test_val = test_val + 1
+    end)
+
+    after_each(function()
+      test_val = test_val + 1
+    end)
+
+    teardown(function()
+      test_val = test_val + 1
+    end)
+
+    spec('runs spec alias', function()
+      test_val = test_val + 1
+    end)
+
+    test('runs test alias', function()
+      test_val = test_val + 1
+    end)
+  end)
+
+  it('checks aliases were executed', function()
+    assert.is_equal(8, test_val)
+  end)
+end)
+
+describe('tests unsupported functions', function()
+  it('it block throws error on describe/context', function()
+    assert.has_error(describe, "'describe' not supported inside current context block")
+    assert.has_error(context, "'context' not supported inside current context block")
+  end)
+
+  it('it block throws error on it/spec/test', function()
+    assert.has_error(it, "'it' not supported inside current context block")
+    assert.has_error(spec, "'spec' not supported inside current context block")
+    assert.has_error(test, "'test' not supported inside current context block")
+  end)
+
+  it('it block throws error on setup/before_each/after_each/teardown', function()
+    assert.has_error(setup, "'setup' not supported inside current context block")
+    assert.has_error(before_each, "'before_each' not supported inside current context block")
+    assert.has_error(after_each, "'after_each' not supported inside current context block")
+    assert.has_error(teardown, "'teardown' not supported inside current context block")
+  end)
+
+  it('it block throws error on randomize', function()
+    assert.has_error(randomize, "'randomize' not supported inside current context block")
+  end)
+
+  it('finaly block throws error on pending', function()
+    finally(function()
+      assert.has_error(pending, "'pending' not supported inside current context block")
+    end)
+  end)
+end)
+
+describe('tests unsupported functions in setup/before_each/after_each/teardown', function()
+  local function testUnsupported()
+    assert.has_error(randomize, "'randomize' not supported inside current context block")
+
+    assert.has_error(describe, "'describe' not supported inside current context block")
+    assert.has_error(context, "'context' not supported inside current context block")
+
+    assert.has_error(pending, "'pending' not supported inside current context block")
+
+    assert.has_error(it, "'it' not supported inside current context block")
+    assert.has_error(spec, "'spec' not supported inside current context block")
+    assert.has_error(test, "'test' not supported inside current context block")
+
+    assert.has_error(setup, "'setup' not supported inside current context block")
+    assert.has_error(before_each, "'before_each' not supported inside current context block")
+    assert.has_error(after_each, "'after_each' not supported inside current context block")
+    assert.has_error(teardown, "'teardown' not supported inside current context block")
+  end
+
+  setup(testUnsupported)
+  teardown(testUnsupported)
+  before_each(testUnsupported)
+  after_each(testUnsupported)
+
+  it('tests nothing, all tests performed by support functions', function()
   end)
 end)

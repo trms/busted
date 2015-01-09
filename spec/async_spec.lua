@@ -1,4 +1,4 @@
-describe('testing the done callback with tokens', function()
+pending('testing the done callback with tokens', function()
 
   it('Tests done call back ordered', function()
     async()
@@ -15,6 +15,7 @@ describe('testing the done callback with tokens', function()
     assert.stub(done.done_cb).was.called(1)
 
     done.done_cb:revert() -- revert so test can complete
+    done()
   end)
 
   it('Tests done call back unordered', function()
@@ -31,6 +32,7 @@ describe('testing the done callback with tokens', function()
     assert.stub(done.done_cb).was.called(1)
 
     done.done_cb:revert() -- revert so test can complete
+    done()
   end)
 
   it('Tests done call back defaulting to ordered', function()
@@ -43,37 +45,43 @@ describe('testing the done callback with tokens', function()
     assert.has_no_error(function() done('2') end)
 
     done.done_cb:revert() -- revert so test can complete
+    done()
   end)
 end)
 
-describe('testing done callbacks being provided for async tests', function()
+pending('testing done callbacks being provided for async tests', function()
   setup(function()
     async()
     assert.is_table(done)
     assert.is_function(done.wait)
+    done()
   end)
 
   before_each(function()
     async()
     assert.is_table(done)
     assert.is_function(done.wait)
+    done()
   end)
 
   after_each(function()
     async()
     assert.is_table(done)
     assert.is_function(done.wait)
+    done()
   end)
 
   teardown(function()
     async()
     assert.is_table(done)
     assert.is_function(done.wait)
+    done()
   end)
 
   it('Tests done callbacks being provided for async tests', function()
     async()
     assert.is_table(done)
     assert.is_function(done.wait)
+    done()
   end)
 end)
