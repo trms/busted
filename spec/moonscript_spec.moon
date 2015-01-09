@@ -1,7 +1,4 @@
-describe "moonscript tests", ->
-  it "runs", ->
+describe 'moonscript tests', ->
+  it 'works', ->
     assert.are.equal true, true
-
-  it "fails", ->
-    assert.error(-> assert.are.equal false, true)
 

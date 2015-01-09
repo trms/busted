@@ -1,6 +1,8 @@
 -- supporting testfile; belongs to 'cl_spec.lua'
 
-describe('Tests the busted command-line options', function()
+require 'busted.runner'()
+
+describe('Tests busted standalone with command-line options', function()
 
   it('is a test with a tag #tag1', function()
     -- works by counting failure
@@ -25,4 +27,3 @@ describe('Tests the busted command-line options', function()
     -- Always succeed
   end)
 end)
-
