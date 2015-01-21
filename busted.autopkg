@@ -2,7 +2,7 @@ nuget {
 	nuspec {
 		id = busted;
 		title: busted;
-		version: 2.0.0.7;
+		version: 2.0.0.8;
 		authors: {coapp, Olivine Labs, Tightrope Media Systems};
 		owners: {Olivine Labs};
 
@@ -22,7 +22,7 @@ nuget {
         packages : {
             // This is a list of other NuGet packages required to use this package.
             // Each item follows the format "<pkg_name>/<version>"
-            lua/"[5.3.0003.02, 5.4)",
+            lua/"[5.2, 5.4)",
 			cliargs,
 			luafilesystem, 
 			dkjson,
